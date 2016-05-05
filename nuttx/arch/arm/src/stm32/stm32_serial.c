@@ -1908,20 +1908,24 @@ static int up_ioctl(struct file *filep, int cmd, unsigned long arg)
 #ifdef CONFIG_USART_BREAKS
     case TIOCSBRK:  /* BSD compatibility: Turn break on, unconditionally */
       {
-        irqstate_t flags = irqsave();
-        uint32_t cr2 = up_serialin(priv, STM32_USART_CR2_OFFSET);
-        up_serialout(priv, STM32_USART_CR2_OFFSET, cr2 | USART_CR2_LINEN);
-        irqrestore(flags);
+	irqstate_t flags = irqsave();
+	uint32_t cr1 = up_serialin(priv, STM32_USART_CR1_OFFSET);
+	up_serialout(priv, STM32_USART_CR1_OFFSET, cr1 | USART_CR1_SBK);
+	uint32_t cr2 = up_serialin(priv, STM32_USART_CR2_OFFSET);
+	up_serialout(priv, STM32_USART_CR2_OFFSET, cr2 | USART_CR2_LINEN);
+	irqrestore(flags);
       }
       break;
 
     case TIOCCBRK:  /* BSD compatibility: Turn break off, unconditionally */
       {
-        irqstate_t flags;
+	irqstate_t flags;
         flags = irqsave();
-        uint32_t cr1 = up_serialin(priv, STM32_USART_CR2_OFFSET);
+	uint32_t cr1 = up_serialin(priv, STM32_USART_CR1_OFFSET);
+        up_serialout(priv, STM32_USART_CR1_OFFSET, cr1 & ~USART_CR1_SBK);
+	uint32_t cr2 = up_serialin(priv, STM32_USART_CR2_OFFSET);
         up_serialout(priv, STM32_USART_CR2_OFFSET, cr2 & ~USART_CR2_LINEN);
-        irqrestore(flags);
+	irqrestore(flags);
       }
       break;
 #endif
